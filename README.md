@@ -43,6 +43,8 @@ Al iniciar por primera vez podrás elegir entre código de emparejamiento o QR.
     └── subbots/
 ```
 
-## Autora
+## Autores
 
-Yulieth 
+Yulieth & Duan Ed
+
+Jhon 
