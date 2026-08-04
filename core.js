@@ -90,6 +90,17 @@ export async function crearBot({
   sock.groupMetadataCache = groupMetadataCache;
   sock.actualizarCacheGrupo = actualizarCacheGrupo;
 
+  sock.contacts = {};
+  sock.ev.on("contacts.upsert", (contactos) => {
+    for (const c of contactos) sock.contacts[c.id] = c;
+  });
+  sock.ev.on("contacts.update", (actualizaciones) => {
+    for (const act of actualizaciones) {
+      if (sock.contacts[act.id]) Object.assign(sock.contacts[act.id], act);
+      else sock.contacts[act.id] = act;
+    }
+  });
+
   if (!yaRegistrado && numeroParaPairing && onPairingCode) {
     pedirCodigoPairing(sock, numeroParaPairing, onPairingCode, etiqueta);
   }
@@ -133,7 +144,7 @@ export async function crearBot({
         if (onLoggedOut) onLoggedOut();
       }
     } else if (connection === "open") {
-      console.log(chalk.greenBright(`[${etiqueta}] conectado correctamente.`));
+      console.log(chalk.greenBright(`[${etiqueta}] conectada correctamente.`));
 
       (async () => {
         try {
