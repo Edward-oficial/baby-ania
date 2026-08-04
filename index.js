@@ -6,6 +6,8 @@ import { config } from "./config.js";
 import { loadPlugins, agruparPorCategoria } from "./pluginLoader.js";
 import { crearBot } from "./core.js";
 import { reconectarSubBots, listarSubBots } from "./subbots.js";
+import { obtenerConfigGrupo } from "./groupSettings.js";
+import { formatoUsuario, aplicarPlantilla } from "./groupHelpers.js";
 
 process.on("uncaughtException", (err) => {
   console.log(chalk.red("[ERROR] Excepción no capturada:"), err);
@@ -47,7 +49,7 @@ function banner(plugins) {
 function avisoConectado() {
   const c = chalk.green;
   console.log("\n" + cajaSuperior(c));
-  console.log(cajaLinea(c, chalk.bold.whiteBright(centrar(`${config.botName} — conectado`))));
+  console.log(cajaLinea(c, chalk.bold.whiteBright(centrar(`${config.botName} — conectada`))));
   console.log(cajaLinea(c, chalk.gray(centrar("Escribí \"menu\" para ver los comandos"))));
   if (config.canal) {
     console.log(cajaLinea(c, chalk.gray(centrar(config.canal))));
@@ -97,11 +99,46 @@ async function iniciar() {
     for (const plugin of plugins) {
       if (plugin.command.includes(primeraPalabra)) {
         try {
-          await plugin.run(sock, msg, args, { ...context, allPlugins: plugins });
+          await plugin.run(sock, msg, args, {
+            ...context,
+            allPlugins: plugins,
+            onMessage,
+            onGroupParticipantsUpdate,
+          });
         } catch (err) {
           console.log(chalk.red(`Error ejecutando el plugin ${plugin.fileName}:`), err);
         }
         break;
+      }
+    }
+  };
+
+  const onGroupParticipantsUpdate = async (sock, update, metadata) => {
+    if (!metadata) return;
+    const { id: chatId, participants, action } = update;
+    const configGrupo = obtenerConfigGrupo(chatId);
+
+    if (action === "add" && configGrupo.welcome) {
+      for (const participante of participants) {
+        const formato = await formatoUsuario(sock, chatId, participante);
+        const texto = aplicarPlantilla(config.welcome.mensajeBienvenida, {
+          mencion: formato.texto,
+          grupo: metadata.subject,
+          cantidad: metadata.participants.length,
+        });
+        await sock.sendMessage(chatId, { text: texto, mentions: formato.mentions });
+      }
+    }
+
+    if (action === "remove" && configGrupo.bye) {
+      for (const participante of participants) {
+        const formato = await formatoUsuario(sock, chatId, participante);
+        const texto = aplicarPlantilla(config.welcome.mensajeDespedida, {
+          mencion: formato.texto,
+          grupo: metadata.subject,
+          cantidad: metadata.participants.length,
+        });
+        await sock.sendMessage(chatId, { text: texto, mentions: formato.mentions });
       }
     }
   };
@@ -112,6 +149,7 @@ async function iniciar() {
     mostrarQR,
     numeroParaPairing,
     onMessage,
+    onGroupParticipantsUpdate,
     onPairingCode: (codigo) => {
       console.log(chalk.greenBright("\nCÓDIGO DE VINCULACIÓN:\n"));
       console.log(chalk.bold.cyan(`${codigo}\n`));
