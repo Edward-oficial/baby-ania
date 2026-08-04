@@ -1,38 +1,54 @@
 import { agruparPorCategoria } from "../../pluginLoader.js";
 import { config } from "../../config.js";
+import { mono, sansBold, sansBoldItalic, FLOR } from "../../decoracion.js";
 
-const ANCHO = 40;
+const IMAGEN_MENU = "https://i.ibb.co/27rFXcxW/IMG-20260803-WA0129.jpg";
 
-function linea(char = "─") {
-  return char.repeat(ANCHO);
+function construirIntro() {
+  return (
+    `\`¿Un menú de qué...?\`\n` +
+    `╰┈➤ ¡El menú de ${mono(config.botName)}!\n\n` +
+    `> ${FLOR} ¡${sansBold("Comandos generales")} para conocerme!\n\n` +
+    `¿Solo eso?\n\n` +
+    `> ${FLOR}¡${sansBoldItalic("Comandos de grupo")} para tus admins!\n\n` +
+    `Mm... ¿y qué más?\n\n` +
+    `> ${FLOR}¡${sansBold("Vinculá tu propio sub-bot")} con un código!\n\n` +
+    `\`¡Y mucho más aquí abajo! Escribí el comando que quieras usar.\``
+  );
 }
 
-function construirMenu(plugins) {
+function construirCategorias(plugins) {
   const grupos = agruparPorCategoria(plugins);
   const categoriasOrdenadas = [...grupos.keys()].sort();
 
-  let texto = `${config.botName}\n`;
-  texto += `${linea("═")}\n`;
-  texto += `Comandos totales: ${plugins.length}\n`;
-  texto += `Categorías: ${categoriasOrdenadas.length}\n`;
-  texto += `${linea("═")}\n\n`;
+  let texto = "";
 
   for (const categoria of categoriasOrdenadas) {
     const comandosDeCategoria = grupos.get(categoria);
-    texto += `${categoria.toUpperCase()}\n`;
-    texto += `${linea()}\n`;
+    texto += `\n${FLOR} ${sansBold(categoria.toUpperCase())}\n`;
 
     for (const plugin of comandosDeCategoria) {
       const comandos = plugin.command.join(" / ");
-      texto += `- ${comandos}`;
-      if (plugin.description) texto += `  →  ${plugin.description}`;
+      texto += `  • ${comandos}`;
+      if (plugin.description) texto += ` — ${plugin.description}`;
       texto += "\n";
     }
-
-    texto += "\n";
   }
 
-  return texto.trim();
+  return texto;
+}
+
+function construirMenu(plugins) {
+  const totalComandos = plugins.reduce((acc, p) => acc + p.command.length, 0);
+  const categorias = agruparPorCategoria(plugins).size;
+
+  return (
+    `${construirIntro()}\n\n` +
+    `${"─".repeat(28)}\n` +
+    `${sansBold("Comandos")}: ${totalComandos}   ${sansBold("Categorías")}: ${categorias}\n` +
+    `${construirCategorias(plugins)}\n` +
+    `Pd: _Creada con cariño por ${config.creator}_`
+  );
 }
 
 export default {
@@ -41,6 +57,11 @@ export default {
   description: "Muestra el menú de comandos disponibles",
   run: async (sock, msg, args, context) => {
     const texto = construirMenu(context.allPlugins || []);
-    await sock.sendMessage(context.chatId, { text: texto }, { quoted: msg });
+
+    await sock.sendMessage(
+      context.chatId,
+      { image: { url: IMAGEN_MENU }, caption: texto },
+      { quoted: msg }
+    );
   },
 };
