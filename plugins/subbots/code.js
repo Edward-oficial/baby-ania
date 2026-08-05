@@ -1,4 +1,5 @@
 import { registrarSubBot } from "../../subbots.js";
+import { sansBold, mono, bullet, SEPARADOR_TITULO, DIVISOR_SUAVE, CIERRE } from "../../decoracion.js";
 
 export default {
   command: ["code", "serbot"],
@@ -11,7 +12,13 @@ export default {
     if (!numero) {
       return sock.sendMessage(
         chatId,
-        { text: "Usá: code 50499999999 (tu número con código de país, sin +)" },
+        {
+          text:
+            `${SEPARADOR_TITULO} ${sansBold("VINCULAR SUB-BOT")} ${SEPARADOR_TITULO}\n\n` +
+            `${bullet("⚠️")} Usá: ${mono("code 50499999999")}\n` +
+            `${bullet("📱")} Tu número con código de país, sin +\n\n` +
+            `${DIVISOR_SUAVE}`,
+        },
         { quoted: msg }
       );
     }
@@ -23,18 +30,33 @@ export default {
         onPairingCode: async (codigo) => {
           await sock.sendMessage(
             chatId,
-            { text: `Código de vinculación para el sub-bot:\n\n${codigo}` },
+            {
+              text:
+                `${SEPARADOR_TITULO} ${sansBold("CÓDIGO DE VINCULACIÓN")} ${SEPARADOR_TITULO}\n\n` +
+                `${bullet("🔗")} ${mono(codigo)}\n\n` +
+                `${DIVISOR_SUAVE}\n${CIERRE}`,
+            },
             { quoted: msg }
           );
         },
         onReady: async () => {
-          await sock.sendMessage(chatId, { text: `Sub-bot ${numero} conectado correctamente.` });
+          await sock.sendMessage(chatId, {
+            text:
+              `${SEPARADOR_TITULO} ${sansBold("SUB-BOT CONECTADO")} ${SEPARADOR_TITULO}\n\n` +
+              `${bullet("✅")} ${mono(numero)} conectado correctamente.\n\n` +
+              `${CIERRE}`,
+          });
         },
       });
     } catch (err) {
       await sock.sendMessage(
         chatId,
-        { text: `No se pudo registrar el sub-bot: ${err.message}` },
+        {
+          text:
+            `${SEPARADOR_TITULO} ${sansBold("ERROR")} ${SEPARADOR_TITULO}\n\n` +
+            `${bullet("❌")} No se pudo registrar el sub-bot:\n${mono(err.message)}\n\n` +
+            `${DIVISOR_SUAVE}`,
+        },
         { quoted: msg }
       );
     }
