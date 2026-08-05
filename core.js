@@ -1,11 +1,14 @@
 import baileysPkg from "@whiskeysockets/baileys";
+// Interop robusto: en algunas versiones de baileys todo cuelga de "default",
+// en otras cuelga directo del módulo. Probamos ambos.
+const baileysNS = baileysPkg?.default ?? baileysPkg;
+const makeWASocket = baileysNS.default ?? baileysNS.makeWASocket ?? baileysPkg.default ?? baileysPkg;
 const {
-  default: makeWASocket,
   useMultiFileAuthState,
   fetchLatestBaileysVersion,
   DisconnectReason,
   Browsers,
-} = baileysPkg;
+} = baileysNS;
 import { Boom } from "@hapi/boom";
 import pino from "pino";
 import chalk from "chalk";
