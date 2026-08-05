@@ -11,8 +11,6 @@ function construirIntro() {
     `> ${FLOR} ¡${sansBold("Comandos generales")} para conocerme!\n\n` +
     `¿Solo eso?\n\n` +
     `> ${FLOR}¡${sansBoldItalic("Comandos de grupo")} para tus admins!\n\n` +
-    `Mm... ¿y qué más?\n\n` +
-    `> ${FLOR}¡${sansBold("Vinculá tu propio sub-bot")} con un código!\n\n` +
     `\`¡Y mucho más aquí abajo! Escribí el comando que quieras usar.\``
   );
 }
@@ -25,13 +23,13 @@ function construirCategorias(plugins) {
 
   for (const categoria of categoriasOrdenadas) {
     const comandosDeCategoria = grupos.get(categoria);
-    texto += `\n${FLOR} ${sansBold(categoria.toUpperCase())}\n`;
+    texto += `\n${FLOR} ${sansBold(categoria.toUpperCase())}\n\n`;
 
     for (const plugin of comandosDeCategoria) {
       const comandos = plugin.command.join(" / ");
-      texto += `  • ${comandos}`;
-      if (plugin.description) texto += ` — ${plugin.description}`;
-      texto += "\n";
+      texto += `> ${mono(comandos)}`;
+      if (plugin.description) texto += `\n> _${plugin.description}_`;
+      texto += "\n\n";
     }
   }
 
