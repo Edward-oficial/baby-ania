@@ -1,5 +1,52 @@
 import axios from "axios";
-import { mono, sansBold, script, FLOR, DIVISOR_FINO, DIVISOR_ESTRELLAS } from "../../decoracion.js";
+
+const FLOR = "✿⃝░";
+
+function mono(texto) {
+  const upper = 0x1d670;
+  const lower = 0x1d68a;
+  const digit = 0x1d7f6;
+  let resultado = "";
+  for (const char of texto) {
+    const code = char.codePointAt(0);
+    if (code >= 65 && code <= 90) resultado += String.fromCodePoint(upper + (code - 65));
+    else if (code >= 97 && code <= 122) resultado += String.fromCodePoint(lower + (code - 97));
+    else if (digit !== null && code >= 48 && code <= 57) resultado += String.fromCodePoint(digit + (code - 48));
+    else resultado += char;
+  }
+  return resultado;
+}
+
+function sansBold(texto) {
+  const upper = 0x1d5d4;
+  const lower = 0x1d5ee;
+  const digit = 0x1d7ec;
+  let resultado = "";
+  for (const char of texto) {
+    const code = char.codePointAt(0);
+    if (code >= 65 && code <= 90) resultado += String.fromCodePoint(upper + (code - 65));
+    else if (code >= 97 && code <= 122) resultado += String.fromCodePoint(lower + (code - 97));
+    else if (digit !== null && code >= 48 && code <= 57) resultado += String.fromCodePoint(digit + (code - 48));
+    else resultado += char;
+  }
+  return resultado;
+}
+
+function script(texto) {
+  const upper = 0x1d4d0;
+  const lower = 0x1d4ea;
+  let resultado = "";
+  for (const char of texto) {
+    const code = char.codePointAt(0);
+    if (code >= 65 && code <= 90) resultado += String.fromCodePoint(upper + (code - 65));
+    else if (code >= 97 && code <= 122) resultado += String.fromCodePoint(lower + (code - 97));
+    else resultado += char;
+  }
+  return resultado;
+}
+
+const DIVISOR_FINO = "﹏﹏﹏﹏﹏﹏﹏﹏﹏﹏﹏";
+const DIVISOR_ESTRELLAS = "＊┈┈┈┈＊┈┈┈┈＊┈┈";
 
 export default {
   command: ["play", "ytplay"],
