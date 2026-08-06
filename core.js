@@ -40,6 +40,31 @@ async function pedirCodigoPairing(sock, numero, onPairingCode, etiqueta, intento
   }
 }
 
+/**
+ * Extrae el texto/id "escrito" cuando el usuario toca un botón (quick_reply o single_select)
+ * generado por sock.sendMessage({ buttons: [...] }).
+ * Estas respuestas NO llegan como conversation/extendedTextMessage, sino como
+ * interactiveResponseMessage con el id serializado en nativeFlowResponseMessage.paramsJson.
+ */
+function extraerRespuestaBoton(message) {
+  const nativeFlow = message?.interactiveResponseMessage?.nativeFlowResponseMessage;
+  if (!nativeFlow?.paramsJson) return null;
+
+  try {
+    const params = JSON.parse(nativeFlow.paramsJson);
+
+    // quick_reply / cta genéricos: { id: "..." }
+    if (params.id) return params.id;
+
+    // single_select (listas): a veces viaja como { list_item: { id: "..." } } o similar
+    if (params.list_item?.id) return params.list_item.id;
+
+    return null;
+  } catch (err) {
+    return null;
+  }
+}
+
 export async function crearBot({
   sessionFolder,
   etiqueta = "BOT",
@@ -201,6 +226,7 @@ export async function crearBot({
       msg.message.extendedTextMessage?.text ||
       msg.message.imageMessage?.caption ||
       msg.message.videoMessage?.caption ||
+      extraerRespuestaBoton(msg.message) ||
       "";
 
     const esGrupo = chatId?.endsWith("@g.us");
