@@ -15,6 +15,7 @@
   "dependencies": {
     "baileysx": "github:Edward-oficial/BaileysX",
     "sharp": "^0.33.5",
+    "axios": "^1.7.9",
     "@hapi/boom": "^10.0.1",
     "pino": "^9.6",
     "chalk": "^5.3.0",
