@@ -1,4 +1,4 @@
-import baileysPkg from "@whiskeysockets/baileys";
+import baileysPkg from "baileysx";
 const baileysExports = baileysPkg?.default ?? baileysPkg;
 
 export const downloadMediaMessage = baileysExports.downloadMediaMessage;
