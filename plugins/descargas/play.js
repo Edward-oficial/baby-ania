@@ -75,8 +75,6 @@ export default {
       );
     }
 
-    // si el "query" es en realidad una URL, viene de haber tocado un item de la lista:
-    // se descarga directo sin volver a buscar
     const isUrl = /^https?:\/\//i.test(query);
 
     try {
@@ -99,36 +97,29 @@ export default {
 
         const resultados = searchRes.data.data.slice(0, MAX_RESULTS);
 
-        // si hay más de un resultado, mostramos la lista para elegir
         if (resultados.length > 1) {
-          const rows = resultados.map((v) => ({
-            title: truncate(sansBold(v.title), 60),
-            description: `${script(formatDuration(v.duration))} • ${script(v.author)}`,
-            rowId: `.play ${v.url}`,
-          }));
-
-          return sock.sendMessage(
-            chatId,
+          const sections = [
             {
-              text:
-                `${FLOR} ${sansBold("Resultados para")}: ${query}\n` +
-                `${FLOR} Tocá una opción de la lista para descargarla.`,
-              title: sansBold("🎧 Elegí una canción"),
-              footer: "Cafirexos · BaileysX",
-              buttons: [
-                {
-                  text: "📜 Ver resultados",
-                  sections: [
-                    {
-                      title: "Resultados de búsqueda",
-                      rows,
-                    },
-                  ],
-                },
-              ],
+              title: sansBold("Resultados de búsqueda"),
+              rows: resultados.map((v, i) => ({
+                title: truncate(v.title, 60),
+                description: `${script(formatDuration(v.duration))} • ${script(v.author)}`,
+                rowId: `${i + 1}`,
+              })),
             },
-            { quoted: msg }
-          );
+          ];
+
+          const listMessage = {
+            text:
+              `${FLOR} ${sansBold("Resultados para")}: ${query}\n` +
+              `${FLOR} Tocá una opción de la lista para descargarla.`,
+            footer: "Cafirexos · BaileysX",
+            title: sansBold("Elegí una canción"),
+            buttonText: "Ver resultados",
+            sections,
+          };
+
+          return sock.sendMessage(chatId, listMessage, { quoted: msg });
         }
 
         video = resultados[0];
@@ -136,58 +127,8 @@ export default {
 
       const urlDescargar = isUrl ? query : video.url;
 
-      const dlRes = await axios.get(
-        `https://dv-edward.onrender.com/api/download/ytaudio?url=${encodeURIComponent(urlDescargar)}&apiKey=edward`
-      );
+      await descargarYEnviar(sock, chatId, msg, urlDescargar, video);
 
-      if (!dlRes.data.status) {
-        return sock.sendMessage(
-          chatId,
-          {
-            text: `${FLOR} ${sansBold("Error al obtener el audio")}`,
-          },
-          { quoted: msg }
-        );
-      }
-
-      const result = dlRes.data.result;
-
-      const detalles = video
-        ? `${FLOR} ${script(video.author)}\n` +
-          `${FLOR} ${script(video.views)}\n` +
-          `${FLOR} ${script(video.publishedAt)}\n`
-        : "";
-
-      await sock.sendMessage(
-        chatId,
-        {
-          image: { url: result.thumbnail },
-          caption:
-            `${DIVISOR_ESTRELLAS}\n` +
-            `${FLOR} ${sansBold(result.title)}\n` +
-            `${DIVISOR_FINO}\n` +
-            `${FLOR} ${script(formatDuration(result.duration))}\n` +
-            detalles +
-            `${DIVISOR_ESTRELLAS}`,
-          title: sansBold(result.title),
-          footer: "Cafirexos · BaileysX",
-          buttons: [
-            { text: "🎵 Enviar audio", id: `play ${urlDescargar}` },
-            { text: "🔗 Ver en YouTube", url: urlDescargar },
-          ],
-        },
-        { quoted: msg }
-      );
-
-      await sock.sendMessage(
-        chatId,
-        {
-          audio: { url: result.download_url },
-          mimetype: "audio/mp4",
-          fileName: `${result.title}.mp3`,
-        },
-        { quoted: msg }
-      );
     } catch (e) {
       await sock.sendMessage(
         chatId,
@@ -199,6 +140,55 @@ export default {
     }
   },
 };
+
+async function descargarYEnviar(sock, chatId, msg, url, video) {
+  const dlRes = await axios.get(
+    `https://dv-edward.onrender.com/api/download/ytaudio?url=${encodeURIComponent(url)}&apiKey=edward`
+  );
+
+  if (!dlRes.data.status) {
+    return sock.sendMessage(
+      chatId,
+      {
+        text: `${FLOR} ${sansBold("Error al obtener el audio")}`,
+      },
+      { quoted: msg }
+    );
+  }
+
+  const result = dlRes.data.result;
+
+  const detalles = video
+    ? `${FLOR} ${script(video.author)}\n` +
+      `${FLOR} ${script(video.views)}\n` +
+      `${FLOR} ${script(video.publishedAt)}\n`
+    : "";
+
+  await sock.sendMessage(
+    chatId,
+    {
+      image: { url: result.thumbnail },
+      caption:
+        `${DIVISOR_ESTRELLAS}\n` +
+        `${FLOR} ${sansBold(result.title)}\n` +
+        `${DIVISOR_FINO}\n` +
+        `${FLOR} ${script(formatDuration(result.duration))}\n` +
+        detalles +
+        `${DIVISOR_ESTRELLAS}`,
+    },
+    { quoted: msg }
+  );
+
+  await sock.sendMessage(
+    chatId,
+    {
+      audio: { url: result.download_url },
+      mimetype: "audio/mp4",
+      fileName: `${result.title}.mp3`,
+    },
+    { quoted: msg }
+  );
+}
 
 function formatDuration(seconds) {
   const min = Math.floor(seconds / 60);
